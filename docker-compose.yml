@@ -1,0 +1,18 @@
+version: "3.8"
+services:
+  jupyter:
+    hostname: 0.0.0.0
+    container_name: note
+    image: 87maxi/notebook
+    build:
+      dockerfile: ./Dockerfile
+    volumes:
+      - ./note:/home/maxi/note
+    ports:
+      - 8080:8888
+
+
+networks:
+  travellist:
+    driver: bridge
+    
