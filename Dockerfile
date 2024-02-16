@@ -140,6 +140,8 @@ RUN python -m pip install numpy
 
 RUN python -m pip install matplotlib
 
+RUN python -m pip install  bokeh
+
 
 RUN python -m pip install plotly
 
