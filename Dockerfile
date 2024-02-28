@@ -149,6 +149,8 @@ RUN  python -m pip install pandas
 
 RUN python -m pip install scipy
 
+RUN python -m pip install injector
+
 
 RUN python -Xfrozen_modules=off -m ipykernel install --user --name=$USER
 
