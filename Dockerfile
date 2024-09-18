@@ -96,7 +96,7 @@ ARG GOLANG_VERSION=1.21.0
 RUN cd ${HOME}/local &&  wget https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz && \
     tar -xzvf go${GOLANG_VERSION}.linux-amd64.tar.gz 
     
-
+RUN rm -rf ${HOME}/local/go${GOLANG_VERSION}.linux-amd64.tar.gz
 
 ENV  PATH=$PATH:/home/educar/local/go/bin
 ENV GOPATH=/home/educar/local/go
@@ -121,10 +121,14 @@ ENV RUBY_VERSION 3.3.5
 
 RUN cd ${HOME} &&  wget "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR}/ruby-${RUBY_VERSION}.tar.gz"
 
-RUN tar xzvf ruby-3.3.5.tar.gz
+RUN tar xzvf ruby-${RUBY_VERSION}.tar.gz
+RUN rm -rf ruby-${RUBY_VERSION}.tar.gz
 
-RUN mv ruby-3.3.5 local/;
-RUN cd local/ruby-3.3.5 && ./configure  --prefix=$HOME/local/ruby  && make && make install ; 
+
+RUN mv ruby-${RUBY_VERSION} local/;
+RUN cd local/ruby-${RUBY_VERSION} && ./configure  --prefix=$HOME/local/ruby  && make && make install ; 
+
+RUN rm -rf ${HOME}/local/ruby-${RUBY_VERSION}
 
 ENV PATH=$PATH:/home/educar/local/ruby/bin
 
@@ -142,6 +146,6 @@ RUN gem install iruby
 ##################### end ruby ##########################################################
 
 
-COPY entrypoint.sh /
+#COPY entrypoint.sh /
 
-ENTRYPOINT [ "/entrypoint.sh" ]
+#ENTRYPOINT [ "/entrypoint.sh" ]
