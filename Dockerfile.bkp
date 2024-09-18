@@ -1,0 +1,228 @@
+FROM alpine:3.18.0
+
+
+RUN apk upgrade
+RUN apk add sudo util-linux
+
+RUN echo http://dl-2.alpinelinux.org/alpine/edge/community/ >> /etc/apk/repositories
+
+RUN apk add -U shadow
+
+ENV USER=maxi
+
+
+
+
+ARG PYTHON_VERSION=3.11.1
+
+
+
+############### RUBY start ########################################################################
+
+RUN set -eux; \
+	mkdir -p /usr/local/etc; \
+	{ \
+		echo 'install: --no-document'; \
+		echo 'update: --no-document'; \
+	} >> /usr/local/etc/gemrc
+
+
+ENV LANG C.UTF-8
+ENV RUBY_MAJOR 3.3-rc
+ENV RUBY_VERSION 3.3.0-preview1
+ENV RUBY_DOWNLOAD_SHA256 ae300b49e06c13087dd163b97eddd38db895dc8e0c9904284119795d75303fbb
+
+
+RUN apk add --no-cache --virtual .ruby-builddeps \
+		autoconf \
+		bison \
+		bzip2 \
+		bzip2-dev \
+		ca-certificates \
+		coreutils \
+		dpkg-dev dpkg \
+		g++ \
+		gcc \
+		gdbm-dev \
+		glib-dev \
+		libc-dev \
+		libffi-dev \
+		libxml2-dev \
+		libxslt-dev \
+		linux-headers \
+		make \
+		ncurses-dev \
+		openssl \
+		openssl-dev \
+		patch \
+		procps \
+		ruby \
+		tar \
+		xz \
+		yaml-dev \
+		zlib-dev \
+		binutils\
+		zeromq-dev\
+		ruby-dev \
+		git \
+		curl \
+		elixir\
+		;
+
+
+RUN rustArch=; \
+	apkArch="$(apk --print-arch)"; \
+	case "$apkArch" in \
+		'x86_64') rustArch='x86_64-unknown-linux-musl'; rustupUrl='https://static.rust-lang.org/rustup/archive/1.25.1/x86_64-unknown-linux-musl/rustup-init'; rustupSha256='95427cb0592e32ed39c8bd522fe2a40a746ba07afb8149f91e936cddb4d6eeac' ;; \
+		'aarch64') rustArch='aarch64-unknown-linux-musl'; rustupUrl='https://static.rust-lang.org/rustup/archive/1.25.1/aarch64-unknown-linux-musl/rustup-init'; rustupSha256='7855404cdc50c20040c743800c947b6f452490d47f8590a4a83bc6f75d1d8eda' ;; \
+	esac; \
+	\
+	if [ -n "$rustArch" ]; then \
+		mkdir -p /tmp/rust; \
+		\
+		wget -O /tmp/rust/rustup-init "$rustupUrl"; \
+		echo "$rustupSha256 */tmp/rust/rustup-init" | sha256sum --check --strict; \
+		chmod +x /tmp/rust/rustup-init; \
+		\
+		export RUSTUP_HOME='/tmp/rust/rustup' CARGO_HOME='/tmp/rust/cargo'; \
+		export PATH="$CARGO_HOME/bin:$PATH"; \
+		/tmp/rust/rustup-init -y --no-modify-path --profile minimal --default-toolchain '1.66.0' --default-host "$rustArch"; \
+		\
+		rustc --version; \
+		cargo --version; \
+	fi;
+
+
+RUN wget -O ruby.tar.xz "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR%-rc}/ruby-$RUBY_VERSION.tar.xz"; 
+
+RUN mkdir -p /usr/src/ruby;
+
+RUN tar -xJf ruby.tar.xz -C /usr/src/ruby --strip-components=1;
+
+RUN rm ruby.tar.xz
+
+
+RUN cd /usr/src/ruby autogen.sh
+
+RUN cd /usr/src/ruby && ./configure 
+
+
+
+
+
+
+RUN ruby --version; \
+	gem --version; 
+
+RUN gem install rake
+RUN gem install ffi
+RUN gem install iruby
+
+
+
+############### RUBY end ########################################################################
+
+########################### PYTHON ##############################################################
+RUN cd /opt \
+    && wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz \                                              
+    && tar xzf Python-${PYTHON_VERSION}.tgz
+
+# build python and remove left-over sources
+RUN cd /opt/Python-${PYTHON_VERSION} \ 
+    && ./configure --prefix=/usr --enable-optimizations --with-ensurepip=install \
+    && make install \
+    && rm /opt/Python-${PYTHON_VERSION}.tgz /opt/Python-${PYTHON_VERSION} -rf
+
+
+RUN python -m pip install  ipython
+
+RUN python -m pip install jupyter
+
+RUN python -m pip install numpy
+
+RUN python -m pip install matplotlib
+
+RUN python -m pip install  bokeh
+
+
+RUN python -m pip install plotly
+
+RUN  python -m pip install pandas
+
+RUN python -m pip install scipy
+
+RUN python -m pip install injector
+
+RUN python -m pip install pyzmq
+
+
+RUN python -Xfrozen_modules=off -m ipykernel install --user --name=$USER
+
+############################ END PYTHON #########################################################
+RUN adduser -D $USER
+
+############################ start golang #######################################################
+
+
+
+ARG GOLANG_VERSION=1.21.0
+RUN wget https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz && \
+    rm -rf /usr/local/go && tar -C /usr/local/share/ -xzf go${GOLANG_VERSION}.linux-amd64.tar.gz && \
+    rm go${GOLANG_VERSION}.linux-amd64.tar.gz
+
+ENV  PATH="$PATH:/usr/local/share/go/bin"
+
+RUN mkdir /home/maxi/go;
+ENV GOPATH=/home/maxi/go;
+RUN  go install github.com/gopherdata/gophernotes@v0.7.5;
+
+RUN mkdir -p  ${HOME}/.local/share/jupyter/kernels/gophernotes
+RUN cd ${HOME}/.local/share/jupyter/kernels/gophernotes;
+RUN cp $(go env GOPATH)/pkg/mod/github.com/gopherdata/gophernotes@v0.7.5/kernel/*  .;
+RUN sed "s|gophernotes|$(go env GOPATH)/bin/gophernotes|" < kernel.json.in > kernel.json;
+
+
+
+
+
+############################ END golang #######################################################
+
+########################## ESTART elixir ######################################################
+
+
+
+#USER $USER
+
+RUN git clone https://github.com/spawnfest/ielixir.git
+
+RUN cd ielixir
+
+RUN mix escript.install github spawnfest/ielixir --force
+
+########################## END elixir ######################################################
+
+
+
+RUN chown 1000:1000 -R /home/maxi;
+
+RUN mkdir /home/maxi/note
+
+
+
+COPY entrypoint.sh /
+
+
+
+
+RUN  mkdir -p  ${HOME}/.local/share/jupyter/kernels/gophernotes
+RUN  cd  ${HOME}/.local/share/jupyter/kernels/gophernotes
+
+
+WORKDIR /home/maxi/note
+
+
+
+
+#ENTRYPOINT [ "/entrypoint.sh" ]
+
+EXPOSE 8888
