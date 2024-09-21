@@ -1,0 +1,257 @@
+FROM alpine:3.13.3
+
+
+#RUN apk upgrade
+RUN apk add sudo util-linux
+
+#RUN echo http://dl-2.alpinelinux.org/alpine/edge/community/ >> /etc/apk/repositories
+#RUN echo http://dl-cdn.alpinelinux.org/alpine/v3.12/main >> /etc/apk/repositories
+
+RUN apk add -U shadow
+
+RUN apk add openssl
+RUN apk add --no-cache --virtual \
+		autoconf \
+		bison \
+		bzip2 \
+		bzip2-dev \
+		ca-certificates \
+		coreutils \
+		dpkg-dev dpkg \
+		g++ \
+		gcc \
+		gdbm-dev \
+		glib-dev \
+		libc-dev \
+		libffi-dev \
+		libxml2-dev \
+		libxslt-dev \
+		linux-headers \
+		make \
+		ncurses-dev \
+		#openssl \
+		#openssl-dev \
+		#openssl1.1-dev\
+		patch \
+		procps \
+		tar \
+		xz \
+		yaml-dev \
+		zlib-dev \
+		binutils\
+		zeromq-dev\
+		git \
+		curl \
+        sqlite-dev \
+        sqlite\
+		ncurses-dev \
+		unixodbc-dev \
+		build-base \
+		libpng-dev \
+		#openjdk21 \
+		#erlang-dev \
+    	#elixir \
+		curl-dev\
+		enchant2-dev \
+		libwebp-dev \
+		libjpeg \
+		libjpeg-turbo-dev \
+		libxpm-dev \
+		oniguruma-dev \
+		freetype-dev \
+		gmp-dev \
+		icu-dev \
+		#icu-data-full \
+		postgresql-dev \
+		aspell-dev \
+		readline-dev \
+		tidyhtml-dev \
+		libzip-dev \
+		libc-dev \
+	;
+
+ENV PKG_CONFIG_PATH="/usr/lib/pkgconfig:/usr/local/lib/pkgconfig"
+RUN apk del python3
+RUN apk del ruby
+RUN adduser -D educar
+
+RUN su educar
+
+WORKDIR /home/educar
+
+
+USER educar
+
+RUN mkdir ${HOME}/local
+
+###################### start python #########################################################
+ARG PYTHON_VERSION=3.11.1
+
+RUN cd ${HOME}/local \
+    && wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz \                                              
+    && tar xzf Python-${PYTHON_VERSION}.tgz
+
+RUN mkdir ${HOME}/local/python
+
+# build python and remove left-over sources
+RUN cd ${HOME}/local/Python-${PYTHON_VERSION} \ 
+    && ./configure --prefix=${HOME}/local/python --enable-optimizations --with-ensurepip=install  --enable-loadable-sqlite-extensions \
+    && make install \
+    && rm ${HOME}/local/Python-${PYTHON_VERSION}.tgz ${HOME}/local/Python-${PYTHON_VERSION} -rf
+
+RUN ln -s /home/educar/local/python/bin/python3.11 /home/educar/local/python/bin/python;
+
+
+ENV PATH=$PATH:/home/educar/local/python/bin
+
+RUN pip3.11 install ipython
+RUN pip3.11 install jupyter
+RUN pip3.11 install numpy
+RUN pip3.11 install matplotlib
+RUN pip3.11 install bokeh
+RUN pip3.11 install plotly
+RUN pip3.11 install pandas
+RUN pip3.11 install scipy
+RUN pip3.11 install injector
+RUN pip3.11 install pyzmq
+
+
+#################### end python #############################################################
+
+##################### start golang ##########################################################
+ARG GOLANG_VERSION=1.21.0
+
+RUN cd ${HOME}/local &&  wget https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz && \
+    tar -xzvf go${GOLANG_VERSION}.linux-amd64.tar.gz 
+    
+RUN rm -rf ${HOME}/local/go${GOLANG_VERSION}.linux-amd64.tar.gz
+
+ENV  PATH=$PATH:/home/educar/local/go/bin
+ENV GOPATH=/home/educar/local/go
+
+RUN   go install github.com/gopherdata/gophernotes@v0.7.5
+
+
+RUN mkdir -p  ${HOME}/.local/share/jupyter/kernels/gophernotes
+RUN cp $(go env GOPATH)/pkg/mod/github.com/gopherdata/gophernotes@v0.7.5/kernel/* ${HOME}/.local/share/jupyter/kernels/gophernotes/;
+RUN chmod 766  ${HOME}/.local/share/jupyter/kernels/gophernotes/*
+RUN cd ${HOME}/.local/share/jupyter/kernels/gophernotes &&  sed "s|gophernotes|$(go env GOPATH)/bin/gophernotes|" < kernel.json.in > kernel.json;
+
+##################### end golang ##########################################################
+
+##################### start ruby ##########################################################
+
+#no son las mismas versiones la que quedan en el contenedor 
+
+ARG LANG=C.UTF-8
+ARG RUBY_MAJOR=3.3
+ARG RUBY_VERSION=3.3.5
+
+RUN cd ${HOME} &&  wget "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR}/ruby-${RUBY_VERSION}.tar.gz"
+
+RUN tar xzvf ruby-${RUBY_VERSION}.tar.gz
+RUN rm -rf ruby-${RUBY_VERSION}.tar.gz
+
+
+RUN mv ruby-${RUBY_VERSION} local/;
+RUN cd local/ruby-${RUBY_VERSION} && ./configure  --prefix=$HOME/local/ruby  && make && make install ; 
+
+RUN rm -rf ${HOME}/local/ruby-${RUBY_VERSION}
+
+ENV PATH=/home/educar/local/ruby/bin:$PATH
+
+
+
+RUN gem install rake
+RUN gem install ffi
+RUN gem install iruby
+
+
+
+##################### end ruby ##########################################################
+
+###################### start erlang #####################################################
+
+RUN cd ${HOME}
+ARG ERLANG_OTP=23.0
+
+
+#  https://github.com/erlang/otp/archive/refs/tags/OTP-${ERLANG_OTP}.tar.gz
+RUN wget https://github.com/erlang/otp/releases/download/OTP-${ERLANG_OTP}/otp_src_${ERLANG_OTP}.tar.gz
+
+RUN tar xzvf otp_src_${ERLANG_OTP}.tar.gz;
+
+RUN mkdir -p ${HOME}/local/erlang
+
+RUN  mv  otp_src_${ERLANG_OTP} ${HOME}/local/erlang 
+
+
+RUN cd  ${HOME}/local/erlang/otp_src_${ERLANG_OTP}  && \
+			./configure  --without-javac --disable-hipe --enable-builtin-zlib --without-odbc --without-wx --prefix=${HOME}/local/erlang &&\ 
+			make clean && \  
+			make -j$(nproc) && \
+			make install ;
+
+
+ENV PATH=/home/educar/local/erlang/bin:$PATH;
+
+###################### end erlang #####################################################
+
+#################### start elixir ########################################################
+RUN cd ${HOME};
+
+ARG ELIXIR_VERSION=1.14.0
+#ARG OTP_VERSION=25
+
+RUN cd ${HOME}/local  &&  wget  https://github.com/elixir-lang/elixir/archive/refs/tags/v${ELIXIR_VERSION}.tar.gz && \
+						tar xzvf  v${ELIXIR_VERSION}.tar.gz && \
+						mv elixir-${ELIXIR_VERSION}  elixir && \
+						cd elixir && \
+						make install PREFIX=${HOME}/local/elixir \
+						;
+
+ENV PATH=/home/educar/local/elixir/bin:$PATH
+
+
+RUN cd ${HOME}/local  && curl -L https://github.com/pprzetacznik/IElixir/archive/refs/heads/master.zip -o ielixir.zip \
+					  && unzip ielixir.zip -d ielixir_tmp \
+					  && mv ielixir_tmp/IElixir-master ielixir \
+					  && rm -rf ielixir_tmp \
+					  && cd ielixir \
+					  && mix local.hex --force \
+					  && mix local.rebar --force \
+					  && mix deps.get \
+					  && mix deps.compile \
+					  #&& MIX_ENV=prod mix install \
+					  && ./install_script.sh ;
+					  
+
+
+
+
+#RUN  mix --version;
+
+
+#RUN mix test;
+
+
+#################### end elixir ########################################################
+
+
+###################### init jupyter ####################################################
+
+RUN iruby register --force;
+
+#RUN jupyter kernel --kernel=ielixir;
+
+
+###################### end jupyter ######################################################
+
+
+EXPOSE 8888
+
+
+
+COPY entrypoint.sh /
+
+ENTRYPOINT [ "/entrypoint.sh" ]

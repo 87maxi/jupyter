@@ -5,7 +5,7 @@ services:
     container_name: note
     image: 87maxi/notebook
     build:
-      dockerfile: ./Dockerfile
+      dockerfile: ./Dockerfile_jupyter
     volumes:
       - ./note:/home/maxi/note
     ports:
