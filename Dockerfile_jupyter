@@ -70,6 +70,8 @@ RUN apk add --no-cache --virtual \
 		libc-dev \
 	;
 
+RUN	apk add --update nodejs nodejs-npm
+
 ENV PKG_CONFIG_PATH="/usr/lib/pkgconfig:/usr/local/lib/pkgconfig"
 RUN apk del python3
 RUN apk del ruby
@@ -126,7 +128,7 @@ RUN cd ${HOME}/local &&  wget https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.
     
 RUN rm -rf ${HOME}/local/go${GOLANG_VERSION}.linux-amd64.tar.gz
 
-ENV  PATH=$PATH:/home/educar/local/go/bin
+ENV  PATH=/home/educar/local/go/bin:$PATH
 ENV GOPATH=/home/educar/local/go
 
 RUN   go install github.com/gopherdata/gophernotes@v0.7.5
@@ -198,6 +200,10 @@ ENV PATH=/home/educar/local/erlang/bin:$PATH;
 ###################### end erlang #####################################################
 
 #################### start elixir ########################################################
+# vesiones de elixir otp
+# https://builds.hex.pm/builds/elixir/builds.txt
+
+
 RUN cd ${HOME};
 
 ARG ELIXIR_VERSION=1.14.0
@@ -227,6 +233,18 @@ RUN cd ${HOME}/local  && curl -L https://github.com/pprzetacznik/IElixir/archive
 					  
 
 
+###### completition elixir 
+RUN git clone https://github.com/elixir-lsp/elixir-ls && \
+	cd elixir-ls/ && \
+	mix deps.update --all && \
+	mix compile && \
+	mix elixir_ls.release -o ~/.elixir_ls;
+
+
+ENV LANGSERVER_ELIXIR=~/.elixir_ls
+
+
+
 
 
 #RUN  mix --version;
@@ -252,6 +270,6 @@ EXPOSE 8888
 
 
 
-COPY entrypoint.sh /
+#COPY entrypoint.sh /
 
-ENTRYPOINT [ "/entrypoint.sh" ]
+#ENTRYPOINT [ "/entrypoint.sh" ]
