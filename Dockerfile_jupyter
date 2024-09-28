@@ -1,83 +1,38 @@
-FROM alpine:3.13.3
+FROM debian:bookworm-slim
 
 
-#RUN apk upgrade
-RUN apk add sudo util-linux
 
-#RUN echo http://dl-2.alpinelinux.org/alpine/edge/community/ >> /etc/apk/repositories
-#RUN echo http://dl-cdn.alpinelinux.org/alpine/v3.12/main >> /etc/apk/repositories
+RUN apt-get upgrade
 
-RUN apk add -U shadow
-
-RUN apk add openssl
-RUN apk add --no-cache --virtual \
-		autoconf \
-		bison \
-		bzip2 \
-		bzip2-dev \
-		ca-certificates \
-		coreutils \
-		dpkg-dev dpkg \
-		g++ \
-		gcc \
-		gdbm-dev \
-		glib-dev \
-		libc-dev \
-		libffi-dev \
-		libxml2-dev \
-		libxslt-dev \
-		linux-headers \
-		make \
-		ncurses-dev \
-		#openssl \
-		#openssl-dev \
-		#openssl1.1-dev\
-		patch \
-		procps \
-		tar \
-		xz \
-		yaml-dev \
-		zlib-dev \
-		binutils\
-		zeromq-dev\
-		git \
-		curl \
-        sqlite-dev \
-        sqlite\
-		ncurses-dev \
-		unixodbc-dev \
-		build-base \
-		libpng-dev \
-		#openjdk21 \
-		#erlang-dev \
-    	#elixir \
-		curl-dev\
-		enchant2-dev \
-		libwebp-dev \
-		libjpeg \
-		libjpeg-turbo-dev \
-		libxpm-dev \
-		oniguruma-dev \
-		freetype-dev \
-		gmp-dev \
-		icu-dev \
-		#icu-data-full \
-		postgresql-dev \
-		aspell-dev \
-		readline-dev \
-		tidyhtml-dev \
-		libzip-dev \
-		libc-dev \
+RUN apt-get update && apt-get install -y \
+    apt-utils \
+    curl wget \
+    gzip unzip tar \
+    ca-certificates \
+    build-essential \
+    git \
+    psmisc procps \
+    locales \
+	libssl-dev \ 
+	zlib1g-dev \
+	libncurses5-dev \
+	libncursesw5-dev \
+	libreadline-dev \
+	libsqlite3-dev \
+	libgdbm-dev \
+	libdb5.3-dev \
+	libbz2-dev \
+	libexpat1-dev \
+	liblzma-dev \
+	tk-dev \
+	libyaml-dev \
+	libzmq3-dev \
 	;
 
-RUN	apk add --update nodejs nodejs-npm
 
-ENV PKG_CONFIG_PATH="/usr/lib/pkgconfig:/usr/local/lib/pkgconfig"
-RUN apk del python3
-RUN apk del ruby
-RUN adduser -D educar
 
-RUN su educar
+RUN useradd -m -s /bin/bash  educar
+
 
 WORKDIR /home/educar
 
@@ -97,10 +52,10 @@ RUN mkdir ${HOME}/local/python
 
 # build python and remove left-over sources
 RUN cd ${HOME}/local/Python-${PYTHON_VERSION} \ 
-    && ./configure --prefix=${HOME}/local/python --enable-optimizations --with-ensurepip=install  --enable-loadable-sqlite-extensions \
-    && make install \
-    && rm ${HOME}/local/Python-${PYTHON_VERSION}.tgz ${HOME}/local/Python-${PYTHON_VERSION} -rf
-
+    && ./configure --prefix=${HOME}/local/python   --enable-loadable-sqlite-extensions \
+    && cd ${HOME}/local/Python-${PYTHON_VERSION} && make && make install \
+    && rm ${HOME}/local/Python-${PYTHON_VERSION}.tgz  
+ 
 RUN ln -s /home/educar/local/python/bin/python3.11 /home/educar/local/python/bin/python;
 
 
@@ -128,7 +83,7 @@ RUN cd ${HOME}/local &&  wget https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.
     
 RUN rm -rf ${HOME}/local/go${GOLANG_VERSION}.linux-amd64.tar.gz
 
-ENV  PATH=/home/educar/local/go/bin:$PATH
+ENV  PATH=$PATH:/home/educar/local/go/bin
 ENV GOPATH=/home/educar/local/go
 
 RUN   go install github.com/gopherdata/gophernotes@v0.7.5
@@ -160,12 +115,13 @@ RUN cd local/ruby-${RUBY_VERSION} && ./configure  --prefix=$HOME/local/ruby  && 
 
 RUN rm -rf ${HOME}/local/ruby-${RUBY_VERSION}
 
-ENV PATH=/home/educar/local/ruby/bin:$PATH
+ENV PATH=$PATH:/home/educar/local/ruby/bin
 
 
 
 RUN gem install rake
 RUN gem install ffi
+RUN gem install ffi-rzmq
 RUN gem install iruby
 
 
@@ -174,8 +130,7 @@ RUN gem install iruby
 
 ###################### start erlang #####################################################
 
-RUN cd ${HOME}
-ARG ERLANG_OTP=23.0
+ARG ERLANG_OTP=25.0
 
 
 #  https://github.com/erlang/otp/archive/refs/tags/OTP-${ERLANG_OTP}.tar.gz
@@ -195,7 +150,7 @@ RUN cd  ${HOME}/local/erlang/otp_src_${ERLANG_OTP}  && \
 			make install ;
 
 
-ENV PATH=/home/educar/local/erlang/bin:$PATH;
+ENV PATH=$PATH:/home/educar/local/erlang/bin
 
 ###################### end erlang #####################################################
 
@@ -204,19 +159,18 @@ ENV PATH=/home/educar/local/erlang/bin:$PATH;
 # https://builds.hex.pm/builds/elixir/builds.txt
 
 
-RUN cd ${HOME};
-
-ARG ELIXIR_VERSION=1.14.0
+ARG ELIXIR_VERSION=1.17.0
 #ARG OTP_VERSION=25
 
 RUN cd ${HOME}/local  &&  wget  https://github.com/elixir-lang/elixir/archive/refs/tags/v${ELIXIR_VERSION}.tar.gz && \
 						tar xzvf  v${ELIXIR_VERSION}.tar.gz && \
-						mv elixir-${ELIXIR_VERSION}  elixir && \
+						mv "elixir-$ELIXIR_VERSION"  elixir && \
 						cd elixir && \
-						make install PREFIX=${HOME}/local/elixir \
+						make && \
+						make install PREFIX="$HOME/local/elixir" \
 						;
 
-ENV PATH=/home/educar/local/elixir/bin:$PATH
+ENV PATH=$PATH:/home/educar/local/elixir/bin
 
 
 RUN cd ${HOME}/local  && curl -L https://github.com/pprzetacznik/IElixir/archive/refs/heads/master.zip -o ielixir.zip \
@@ -231,20 +185,6 @@ RUN cd ${HOME}/local  && curl -L https://github.com/pprzetacznik/IElixir/archive
 					  #&& MIX_ENV=prod mix install \
 					  && ./install_script.sh ;
 					  
-
-
-###### completition elixir 
-RUN git clone https://github.com/elixir-lsp/elixir-ls && \
-	cd elixir-ls/ && \
-	mix deps.update --all && \
-	mix compile && \
-	mix elixir_ls.release -o ~/.elixir_ls;
-
-
-ENV LANGSERVER_ELIXIR=~/.elixir_ls
-
-
-
 
 
 #RUN  mix --version;
@@ -273,3 +213,5 @@ EXPOSE 8888
 #COPY entrypoint.sh /
 
 #ENTRYPOINT [ "/entrypoint.sh" ]
+
+CMD jupyter lab --ip 0.0.0.0 --no-browser --NotebookApp.token='' --NotebookApp.password='' --notebook-dir=/home/maxi/note 
