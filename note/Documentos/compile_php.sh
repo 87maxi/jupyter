@@ -87,6 +87,26 @@ sed -i  "s#127.0.0.1:9000#/var/run/php/php-fpm.sock#g"  /usr/local/etc/php-fpm.d
 
 mkdir -p /var/run/php;
 
-sudo ./usr/local/sbin/php-fpm;
+
+
+cat > /etc/systemd/system/php-fpm.service <<- EOM
+[Unit]
+Description=The PHP FastCGI Process Manager
+After=network.target
+
+[Service]
+Type=simple
+PIDFile=/run/php-fpm.pid
+ExecStart=/usr/local/sbin/php-fpm --nodaemonize --fpm-config /usr/local/etc/php-fpm.conf
+ExecReload=/bin/kill -USR2 $MAINPID
+ExecStop=/bin/kill -QUIT $MAINPID
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+EOM
+
+
+
 
 
