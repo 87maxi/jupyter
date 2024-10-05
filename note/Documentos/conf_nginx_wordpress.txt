@@ -1,0 +1,44 @@
+server {
+    listen 80;
+    server_name 192.168.1.112;
+
+    root /home/maxi/wordpress ; # Ajusta esto a tu directorio de WordPress
+    index index.php index.html index.htm;
+
+    # Configuración para manejar las solicitudes de WordPress
+    location / {
+        try_files $uri $uri/ /index.php?$args;
+    }
+
+    # Procesar archivos PHP
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    # Denegar el acceso a los archivos .htaccess, ya que Nginx no los usa
+    location ~ /\.ht {
+        deny all;
+    }
+
+    # Configuración adicional de seguridad
+    location ~* /(?:uploads|files)/.*\.php$ {
+        deny all;
+    }
+
+    # Configurar caché de navegador para mejorar el rendimiento
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
+        expires max;
+        log_not_found off;
+    }
+}
+
+
+
+
+
+
+
+
