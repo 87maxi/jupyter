@@ -1,0 +1,3 @@
+instalacion de wordpress
+
+wget  https://wordpress.org/latest.zip && unzip latest.zip

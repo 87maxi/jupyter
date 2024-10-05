@@ -93,7 +93,7 @@ RUN rustArch=; \
 	fi;
 
 
-RUN wget -O ruby.tar.xz "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR%-rc}/ruby-$RUBY_VERSION.tar.xz"; 
+RUN wget -O ruby.tar.xz "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR%-rc}/ruby-$RUBY_VERSION.tar.xz";
 
 RUN mkdir -p /usr/src/ruby;
 
@@ -104,7 +104,7 @@ RUN rm ruby.tar.xz
 
 RUN cd /usr/src/ruby autogen.sh
 
-RUN cd /usr/src/ruby && ./configure 
+RUN cd /usr/src/ruby && ./configure
 
 
 
@@ -112,7 +112,7 @@ RUN cd /usr/src/ruby && ./configure
 
 
 RUN ruby --version; \
-	gem --version; 
+	gem --version;
 
 RUN gem install rake
 RUN gem install ffi
@@ -124,11 +124,11 @@ RUN gem install iruby
 
 ########################### PYTHON ##############################################################
 RUN cd /opt \
-    && wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz \                                              
+    && wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz \
     && tar xzf Python-${PYTHON_VERSION}.tgz
 
 # build python and remove left-over sources
-RUN cd /opt/Python-${PYTHON_VERSION} \ 
+RUN cd /opt/Python-${PYTHON_VERSION} \
     && ./configure --prefix=/usr --enable-optimizations --with-ensurepip=install \
     && make install \
     && rm /opt/Python-${PYTHON_VERSION}.tgz /opt/Python-${PYTHON_VERSION} -rf
