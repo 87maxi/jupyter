@@ -3,7 +3,7 @@
 ##########################
 ######## debian ##########
 ##########################
-apt install gcc  pkg-config  libxml2-dev libssl-dev libsqlite3-dev zlib1g-dev libcurl4-openssl-dev libwebp-dev libbz2-dev libpng-dev  libjpeg-dev libfreetype6-dev   libgmp-dev build-essential php libxpm-dev libonig-dev  libpq-dev libpspell-dev  libreadline-dev libtidy-dev libxslt1-dev libzip-dev
+apt install gcc  pkg-config  libxml2-dev libssl-dev libsqlite3-dev zlib1g-dev libcurl4-openssl-dev libwebp-dev libbz2-dev libpng-dev  libjpeg-dev libfreetype6-dev   libgmp-dev build-essential php libxpm-dev libonig-dev  libpq-dev libpspell-dev  libreadline-dev libtidy-dev libxslt1-dev libzip-dev libmariadb-dev default-libmysqlclient-dev
 
 #####################
 # instalacion de php#
@@ -18,6 +18,7 @@ tar xzvf php-${PHP_VERSION}.tar.gz;
     ./configure CC=/usr/bin/gcc  \
     --enable-phpdbg \
     --enable-fpm \
+    --enable-pdo
     --with-pdo-mysql=mysqlnd \
     --with-mysqli=mysqlnd \
     #--with-pgsql \
@@ -38,15 +39,15 @@ tar xzvf php-${PHP_VERSION}.tar.gz;
     --enable-xmlreader \
     --with-xsl \
     --with-tidy \
-    #--enable-sysvsem \
-    #--enable-sysvshm \
+    --enable-sysvsem \
+    --enable-sysvshm \
     --enable-shmop \
     --enable-pcntl \
     --with-readline \
     --enable-mbstring \
     --with-curl \
     --with-gettext \
-    #--enable-sockets \
+    --enable-sockets \
     --with-bz2 \
     --with-openssl \
     --with-gmp \
@@ -54,17 +55,20 @@ tar xzvf php-${PHP_VERSION}.tar.gz;
     --enable-calendar \
     --enable-ftp \
     --with-pspell=/usr; 
-    #--with-enchant=/usr \
-    #--with-kerberos \
-    #--enable-sysvmsg \
-    #--with-ffi \
-    #--with-sodium \
-    #--enable-zend-test=shared \
-    #--enable-dl-test=shared \
-    #--enable-werror \
-    #--with-libxml \
-    #--with-pear 
+    --with-enchant=/usr \
+    --with-kerberos \
+    --enable-sysvmsg \
+    --with-ffi \
+    --with-sodium \
+    --enable-zend-test=shared \
+    --enable-dl-test=shared \
+    --enable-werror \
+    --with-libxml \
+    --with-pear 
 
  make ;
  make install;
- make test;
+ #make test;
+
+cp php.ini-production /usr/local/lib/php.ini
+ 
