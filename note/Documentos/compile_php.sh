@@ -101,10 +101,18 @@ ExecStart=/usr/local/sbin/php-fpm --nodaemonize --fpm-config /usr/local/etc/php-
 ExecReload=/bin/kill -USR2 $MAINPID
 ExecStop=/bin/kill -QUIT $MAINPID
 PrivateTmp=true
+User=www-data
+Group=www-data 
+
 
 [Install]
 WantedBy=multi-user.target
 EOM
+
+
+systemctl enable php-fpm;
+systemctl start php-fpm;
+
 
 
 
