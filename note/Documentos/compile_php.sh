@@ -75,4 +75,18 @@ tar xzvf php-${PHP_VERSION}.tar.gz;
 cp  php-${PHP_VERSION}/php.ini-production /usr/local/lib/php.ini;
 
 cp /usr/local/etc/php-fpm.conf.default /usr/local/etc/php-fpm.conf;
+
+sudo sed -i  "s#NONE#/usr/local#g" /usr/local/etc/php-fpm.conf;
  
+sudo cp /usr/local/etc/php-fpm.d/www.conf.default /usr/local/etc/php-fpm.d/www.conf;
+
+
+sed -i "s#nobody#www-data#g" /usr/local/etc/php-fpm.d/www.conf;
+
+sed -i  "s#127.0.0.1:9000#/var/run/php/php-fpm.sock#g"  /usr/local/etc/php-fpm.d/www.conf;
+
+mkdir -p /var/run/php;
+
+sudo ./usr/local/sbin/php-fpm;
+
+
