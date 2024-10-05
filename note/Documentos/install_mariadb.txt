@@ -2,7 +2,7 @@ sudo apt install mariadb-server mariadb-client mariadb-common -y
 
 
 
-CREATE DATABASE nombre_de_tu_base_de_datos;
-CREATE USER 'usuario'@'localhost' IDENTIFIED BY 'contraseña';
-GRANT ALL PRIVILEGES ON nombre_de_tu_base_de_datos.* TO 'usuario'@'localhost';
+CREATE DATABASE worpress;
+CREATE USER 'wordpress'@'localhost' IDENTIFIED BY 'qwerty';
+GRANT ALL PRIVILEGES ON nombre_de_tu_base_de_datos.* TO 'wordpress'@'localhost';
 FLUSH PRIVILEGES;

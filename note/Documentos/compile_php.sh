@@ -3,7 +3,33 @@
 ##########################
 ######## debian ##########
 ##########################
-apt install gcc  pkg-config  libxml2-dev libssl-dev libsqlite3-dev zlib1g-dev libcurl4-openssl-dev libwebp-dev libbz2-dev libpng-dev  libjpeg-dev libfreetype6-dev   libgmp-dev build-essential php libxpm-dev libonig-dev  libpq-dev libpspell-dev  libreadline-dev libtidy-dev libxslt1-dev libzip-dev libmariadb-dev default-libmysqlclient-dev
+apt update;
+
+apt install gcc  \
+            pkg-config \
+            libxml2-dev \
+            libssl-dev \ 
+            libsqlite3-dev \ 
+            zlib1g-dev \ 
+            libcurl4-openssl-dev \
+            libwebp-dev \
+            libbz2-dev \
+            libpng-dev \
+            libjpeg-dev \ 
+            libfreetype6-dev  \
+            libgmp-dev \
+            build-essential \
+            libxpm-dev \
+            libonig-dev \
+            libpq-dev \
+            libpspell-dev \
+            libreadline-dev \
+            libtidy-dev \
+            libxslt1-dev \
+            libzip-dev \
+            libmariadb-dev \
+            default-libmysqlclient-dev 
+            g++ -y ;
 
 #####################
 # instalacion de php#
@@ -70,5 +96,7 @@ tar xzvf php-${PHP_VERSION}.tar.gz;
  make install;
  #make test;
 
-cp php.ini-production /usr/local/lib/php.ini
+cp  php-${PHP_VERSION}/php.ini-production /usr/local/lib/php.ini;
+
+cp /usr/local/etc/php-fpm.conf.default /usr/local/etc/php-fpm.conf;
  
