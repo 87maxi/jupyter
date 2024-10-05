@@ -21,11 +21,11 @@ tar xzvf php-${PHP_VERSION}.tar.gz;
     --enable-pdo
     --with-pdo-mysql=mysqlnd \
     --with-mysqli=mysqlnd \
-    #--with-pgsql \
-    #--with-pdo-pgsql \
-    #--with-pdo-sqlite \
-    #--enable-intl \
-    #--without-pear \
+    --with-pgsql \
+    --with-pdo-pgsql \
+    --with-pdo-sqlite \
+    --enable-intl \
+    --without-pear \
     --enable-gd \
     --with-jpeg \
     --with-webp \
