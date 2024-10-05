@@ -85,8 +85,6 @@ sed -i "s#nobody#www-data#g" /usr/local/etc/php-fpm.d/www.conf;
 
 sed -i  "s#127.0.0.1:9000#/var/run/php/php-fpm.sock#g"  /usr/local/etc/php-fpm.d/www.conf;
 
-mkdir -p /var/run/php;
-
 
 
 cat > /etc/systemd/system/php-fpm.service <<- EOM
@@ -108,6 +106,15 @@ Group=www-data
 [Install]
 WantedBy=multi-user.target
 EOM
+
+
+mkdir -p /var/run/php;
+
+chown www-data:www-data -R /var/run/php;
+
+touch /usr/local/var/log/php-fpm.log;
+
+chown www-data:www-data /usr/local/var/log/php-fpm.log
 
 
 systemctl enable php-fpm;
