@@ -1,9 +1,12 @@
 server {
     listen 80;
-    server_name 192.168.1.112;
+    #  server_name 192.168.1.112;
 
-    root /home/maxi/wordpress ; # Ajusta esto a tu directorio de WordPress
+    root /var/www/html/wordpress; # Ajusta esto a tu directorio de WordPress
     index index.php index.html index.htm;
+
+    error_log /var/log/nginx/wordpress_error.log;
+    access_log /var/log/nginx/wordpress_access.log;
 
     # Configuración para manejar las solicitudes de WordPress
     location / {
