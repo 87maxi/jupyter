@@ -1,0 +1,177 @@
+FROM alpine:3.20
+
+
+
+ARG SRC
+
+RUN apk upgrade
+RUN apk add sudo util-linux
+
+
+RUN apk add -U shadow
+
+RUN apk add openssl
+RUN apk add --no-cache --virtual \
+    enchant \
+    autoconf \
+    bison \
+    bzip2 \
+    bzip2-dev \
+    ca-certificates \
+    coreutils \
+    dpkg-dev dpkg \
+    g++ \
+    gcc \
+    musl-dev \
+    gdbm-dev \
+    glib-dev \
+    libc-dev \
+    libffi-dev \
+    libxml2-dev \
+    libxslt-dev \
+    linux-headers \
+    make \
+    ncurses-dev \
+    #openssl \
+    openssl-dev \
+    #openssl1.1-dev\
+    patch \
+    procps \
+    tar \
+    xz \
+    yaml-dev \
+    zlib-dev \
+    binutils\
+    zeromq-dev\
+    git \
+    curl \
+    sqlite-dev \
+    sqlite\
+    ncurses-dev \
+    unixodbc-dev \
+    build-base \
+    libpng-dev \
+    #openjdk21 \
+    #erlang-dev \
+    #elixir \
+    curl-dev\
+    enchant \
+    libwebp-dev \
+    libjpeg \
+    libjpeg-turbo-dev \
+    libxpm-dev \
+    oniguruma-dev \
+    freetype-dev \
+    gmp-dev \
+    icu-dev \
+    #icu-data-full \
+    postgresql-dev \
+    aspell-dev \
+    readline-dev \
+    tidyhtml-dev \
+    libzip-dev \
+    libc-dev \
+    libgcrypt-dev \
+    cmake \
+    libzmq \
+    util-linux-dev \
+    ;
+
+
+
+WORKDIR /tmp
+RUN git clone https://github.com/nlohmann/json.git && \
+    cd json && \
+    mkdir build && cd build && \
+    cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local && \
+    make install
+
+RUN apk del python*
+
+
+############################ set users #######################################################
+ARG USR=$USR
+
+RUN adduser -D ${USR}
+
+USER ${USR}
+
+WORKDIR /home/${USR}
+
+RUN mkdir $SRC
+
+########################## end user #########################################################
+
+###################### start python #########################################################
+
+
+
+ARG PYTHON_VERSION=3.11.1
+
+RUN cd ${SRC} \
+    && wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz \
+    && tar xzf Python-${PYTHON_VERSION}.tgz
+
+RUN mkdir ${SRC}/python
+
+# build python and remove left-over sources
+RUN cd ${SRC}/Python-${PYTHON_VERSION} \
+    && ./configure --prefix=${SRC}/python   --enable-loadable-sqlite-extensions \
+    && cd ${SRC}/Python-${PYTHON_VERSION} && make && make install \
+    && rm ${SRC}/Python-${PYTHON_VERSION}.tgz
+
+RUN ln -s ${SRC}/python/bin/python3.11 ${SRC}/python/bin/python;
+
+
+ENV PATH="$PATH:${SRC}/python/bin"
+
+RUN pip3.11 install ipython
+RUN pip3.11 install jupyter
+RUN pip3.11 install numpy
+RUN pip3.11 install matplotlib
+RUN pip3.11 install bokeh
+RUN pip3.11 install plotly
+RUN pip3.11 install pandas
+RUN pip3.11 install scipy
+RUN pip3.11 install injector
+RUN pip3.11 install pyzmq
+
+
+#################### end python #############################################################
+
+
+####################### start lua ###########################################################
+
+# Definir la versión de Lua que deseas instalar
+ARG LUA_VERSION=5.4.6
+
+RUN mkdir ${SRC}/lua
+
+# Descargar y compilar Lua desde el código fuente
+RUN cd ${SRC}/lua \
+    && wget https://www.lua.org/ftp/lua-${LUA_VERSION}.tar.gz \
+    && tar xzvf lua-${LUA_VERSION}.tar.gz \
+    && cd lua-${LUA_VERSION} \
+    && make linux \
+    && make INSTALL_TOP=$SRC/lua install
+
+
+RUN rm -rf  ${SRC}/lua/lua-${LUA_VERSION}.tar.gz \
+    && rm -rf ${SRC}/lua/lua-${LUA_VERSION}
+
+ENV PATH=$PATH:$SRC/lua/bin
+
+# Instalar xeus-lua desde el repositorio oficial
+RUN cd $SRC &&  git clone https://github.com/jupyter-xeus/xeus.git && \
+    cd xeus && \
+    cmake -DCMAKE_INSTALL_PREFIX=/tmp && \
+    make && \
+    make install
+
+
+RUN jupyter-kernelspec install ${SRC}/xeus  --user
+
+################## end lua ##############################################################
+EXPOSE 8888
+
+#CMD jupyter lab --ip 0.0.0.0 --no-browser --NotebookApp.token='' --NotebookApp.password='' --notebook-dir=/home/jupyter/note

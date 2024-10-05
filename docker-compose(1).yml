@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim
+FROM debian:12-slim
 
 
 
@@ -13,53 +13,57 @@ RUN apt-get update && apt-get install -y \
     git \
     psmisc procps \
     locales \
-	libssl-dev \ 
-	zlib1g-dev \
-	libncurses5-dev \
-	libncursesw5-dev \
-	libreadline-dev \
-	libsqlite3-dev \
-	libgdbm-dev \
-	libdb5.3-dev \
-	libbz2-dev \
-	libexpat1-dev \
-	liblzma-dev \
-	tk-dev \
-	libyaml-dev \
-	libzmq3-dev \
-	;
+    libssl-dev \
+    zlib1g-dev \
+    libncurses5-dev \
+    libncursesw5-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libgdbm-dev \
+    libdb5.3-dev \
+    libbz2-dev \
+    libexpat1-dev \
+    liblzma-dev \
+    tk-dev \
+    libyaml-dev \
+    libzmq3-dev \
+    ;
 
 
 
-RUN useradd -m -s /bin/bash  educar
+RUN useradd -D ${USR}
 
 
-WORKDIR /home/educar
+WORKDIR ${SRC}
 
 
-USER educar
+USER ${USR}
 
-RUN mkdir ${HOME}/local
+RUN mkdir -p ${SRC}
+
 
 ###################### start python #########################################################
+
+
+
 ARG PYTHON_VERSION=3.11.1
 
-RUN cd ${HOME}/local \
-    && wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz \                                              
+RUN cd ${SRC} \
+    && wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz \
     && tar xzf Python-${PYTHON_VERSION}.tgz
 
-RUN mkdir ${HOME}/local/python
+RUN mkdir ${SRC}/python
 
 # build python and remove left-over sources
-RUN cd ${HOME}/local/Python-${PYTHON_VERSION} \ 
-    && ./configure --prefix=${HOME}/local/python   --enable-loadable-sqlite-extensions \
-    && cd ${HOME}/local/Python-${PYTHON_VERSION} && make && make install \
-    && rm ${HOME}/local/Python-${PYTHON_VERSION}.tgz  
- 
-RUN ln -s /home/educar/local/python/bin/python3.11 /home/educar/local/python/bin/python;
+RUN cd ${SRC}/Python-${PYTHON_VERSION} \
+    && ./configure --prefix=${SRC}/python   --enable-loadable-sqlite-extensions \
+    && cd ${SRC}/Python-${PYTHON_VERSION} && make && make install \
+    && rm ${SRC}/Python-${PYTHON_VERSION}.tgz
+
+RUN ln -s ${SRC}/python/bin/python3.11 ${SRC}/python/bin/python;
 
 
-ENV PATH=$PATH:/home/educar/local/python/bin
+ENV PATH="$PATH:${SRC}/python/bin"
 
 RUN pip3.11 install ipython
 RUN pip3.11 install jupyter
@@ -78,10 +82,10 @@ RUN pip3.11 install pyzmq
 ##################### start golang ##########################################################
 ARG GOLANG_VERSION=1.21.0
 
-RUN cd ${HOME}/local &&  wget https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz && \
-    tar -xzvf go${GOLANG_VERSION}.linux-amd64.tar.gz 
-    
-RUN rm -rf ${HOME}/local/go${GOLANG_VERSION}.linux-amd64.tar.gz
+RUN cd ${SRC} &&  wget https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz && \
+    tar -xzvf go${GOLANG_VERSION}.linux-amd64.tar.gz
+
+RUN rm -rf ${SRC}/go${GOLANG_VERSION}.linux-amd64.tar.gz
 
 ENV  PATH=$PATH:/home/educar/local/go/bin
 ENV GOPATH=/home/educar/local/go
@@ -98,7 +102,7 @@ RUN cd ${HOME}/.local/share/jupyter/kernels/gophernotes &&  sed "s|gophernotes|$
 
 ##################### start ruby ##########################################################
 
-#no son las mismas versiones la que quedan en el contenedor 
+#no son las mismas versiones la que quedan en el contenedor
 
 ARG LANG=C.UTF-8
 ARG RUBY_MAJOR=3.3
@@ -111,9 +115,9 @@ RUN rm -rf ruby-${RUBY_VERSION}.tar.gz
 
 
 RUN mv ruby-${RUBY_VERSION} local/;
-RUN cd local/ruby-${RUBY_VERSION} && ./configure  --prefix=$HOME/local/ruby  && make && make install ; 
+RUN cd local/ruby-${RUBY_VERSION} && ./configure  --prefix=$HOME/local/ruby  && make && make install ;
 
-RUN rm -rf ${HOME}/local/ruby-${RUBY_VERSION}
+RUN rm -rf ${SRC}/ruby-${RUBY_VERSION}
 
 ENV PATH=$PATH:/home/educar/local/ruby/bin
 
@@ -138,16 +142,16 @@ RUN wget https://github.com/erlang/otp/releases/download/OTP-${ERLANG_OTP}/otp_s
 
 RUN tar xzvf otp_src_${ERLANG_OTP}.tar.gz;
 
-RUN mkdir -p ${HOME}/local/erlang
+RUN mkdir -p ${SRC}/erlang
 
-RUN  mv  otp_src_${ERLANG_OTP} ${HOME}/local/erlang 
+RUN  mv  otp_src_${ERLANG_OTP} ${SRC}/erlang
 
 
-RUN cd  ${HOME}/local/erlang/otp_src_${ERLANG_OTP}  && \
-			./configure  --without-javac --disable-hipe --enable-builtin-zlib --without-odbc --without-wx --prefix=${HOME}/local/erlang &&\ 
-			make clean && \  
-			make -j$(nproc) && \
-			make install ;
+RUN cd  ${SRC}/erlang/otp_src_${ERLANG_OTP}  && \
+    ./configure  --without-javac --disable-hipe --enable-builtin-zlib --without-odbc --without-wx --prefix=${SRC}/erlang &&\
+    make clean && \
+    make -j$(nproc) && \
+    make install ;
 
 
 ENV PATH=$PATH:/home/educar/local/erlang/bin
@@ -162,29 +166,29 @@ ENV PATH=$PATH:/home/educar/local/erlang/bin
 ARG ELIXIR_VERSION=1.17.0
 #ARG OTP_VERSION=25
 
-RUN cd ${HOME}/local  &&  wget  https://github.com/elixir-lang/elixir/archive/refs/tags/v${ELIXIR_VERSION}.tar.gz && \
-						tar xzvf  v${ELIXIR_VERSION}.tar.gz && \
-						mv "elixir-$ELIXIR_VERSION"  elixir && \
-						cd elixir && \
-						make && \
-						make install PREFIX="$HOME/local/elixir" \
-						;
+RUN cd ${SRC}  &&  wget  https://github.com/elixir-lang/elixir/archive/refs/tags/v${ELIXIR_VERSION}.tar.gz && \
+    tar xzvf  v${ELIXIR_VERSION}.tar.gz && \
+    mv "elixir-$ELIXIR_VERSION"  elixir && \
+    cd elixir && \
+    make && \
+    make install PREFIX="$HOME/local/elixir" \
+    ;
 
 ENV PATH=$PATH:/home/educar/local/elixir/bin
 
 
-RUN cd ${HOME}/local  && curl -L https://github.com/pprzetacznik/IElixir/archive/refs/heads/master.zip -o ielixir.zip \
-					  && unzip ielixir.zip -d ielixir_tmp \
-					  && mv ielixir_tmp/IElixir-master ielixir \
-					  && rm -rf ielixir_tmp \
-					  && cd ielixir \
-					  && mix local.hex --force \
-					  && mix local.rebar --force \
-					  && mix deps.get \
-					  && mix deps.compile \
-					  #&& MIX_ENV=prod mix install \
-					  && ./install_script.sh ;
-					  
+RUN cd ${SRC}  && curl -L https://github.com/pprzetacznik/IElixir/archive/refs/heads/master.zip -o ielixir.zip \
+    && unzip ielixir.zip -d ielixir_tmp \
+    && mv ielixir_tmp/IElixir-master ielixir \
+    && rm -rf ielixir_tmp \
+    && cd ielixir \
+    && mix local.hex --force \
+    && mix local.rebar --force \
+    && mix deps.get \
+    && mix deps.compile \
+    #&& MIX_ENV=prod mix install \
+    && ./install_script.sh ;
+
 
 
 #RUN  mix --version;
@@ -214,4 +218,4 @@ EXPOSE 8888
 
 #ENTRYPOINT [ "/entrypoint.sh" ]
 
-CMD jupyter lab --ip 0.0.0.0 --no-browser --NotebookApp.token='' --NotebookApp.password='' --notebook-dir=/home/maxi/note 
+CMD jupyter lab --ip 0.0.0.0 --no-browser --NotebookApp.token='' --NotebookApp.password='' --notebook-dir=/home/maxi/note
