@@ -3,7 +3,7 @@
 ##########################
 ######## debian ##########
 ##########################
-apt install gcc  pkg-config  libxml2-dev libssl-dev libsqlite3-dev zlib1g-dev libcurl4-openssl-dev libwebp-dev libbz2-dev libpng-dev  libjpeg-dev libfreetype6-dev   libgmp-dev build-essential php libxpm-dev libonig-dev  libpq-dev libpspell-dev  libreadline-dev libtidy-dev libxslt1-dev libzip-d
+apt install gcc  pkg-config  libxml2-dev libssl-dev libsqlite3-dev zlib1g-dev libcurl4-openssl-dev libwebp-dev libbz2-dev libpng-dev  libjpeg-dev libfreetype6-dev   libgmp-dev build-essential php libxpm-dev libonig-dev  libpq-dev libpspell-dev  libreadline-dev libtidy-dev libxslt1-dev libzip-dev
 
 #####################
 # instalacion de php#
