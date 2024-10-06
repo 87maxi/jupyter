@@ -1,3 +1,6 @@
 instalacion de wordpress
 
 wget  https://wordpress.org/latest.zip && unzip latest.zip && chown www-data:www-data -R wordpress && chmod 755 -R wordpress
+
+
+sudo wget  https://wordpress.org/latest.zip && sudo  unzip latest.zip && sudo chown www-data:www-data -R wordpress && sudo  chmod 755 -R wordpress
