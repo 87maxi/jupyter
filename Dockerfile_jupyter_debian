@@ -1,4 +1,4 @@
-FROM debian:12-slim
+FROM debian:bookworm-slim
 
 
 
@@ -8,6 +8,8 @@ ARG USR="jupyter"
 
 
 RUN apt-get upgrade
+
+
 
 RUN apt-get update && apt-get install -y \
     apt-utils \
@@ -33,10 +35,29 @@ RUN apt-get update && apt-get install -y \
     libyaml-dev \
     libzmq3-dev \
     bash \
+    cargo \
+    make \
+    cmake \
+    g++ \ 
+    pkg-config \
+    libssl-dev \
+    lsb-release  \
+    curl \
+    software-properties-common \ 
+    gnupg \
     sudo \
     ;
 
 
+# Agrega snapshot deshabilitando verificación de GPG y expiración
+RUN echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until && \
+    echo 'Acquire::AllowInsecureRepositories "true";' >> /etc/apt/apt.conf.d/99no-check-valid-until && \
+    echo 'deb [trusted=yes] http://snapshot.debian.org/archive/debian/20210601T000000Z bullseye main' > /etc/apt/sources.list.d/llvm11.list && \
+    apt-get update && \
+    apt-get install -y llvm-11 clang-11 libclang-11-dev && \
+    rm /etc/apt/sources.list.d/llvm11.list && \
+    rm /etc/apt/apt.conf.d/99no-check-valid-until && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m -s /bin/bash  ${USR} 
 #    && echo "${USR}:qwerty" | chpasswd \
@@ -50,7 +71,7 @@ RUN useradd -m -s /bin/bash  ${USR}
 
 
 
-USER ${USR}
+
 
 RUN mkdir -p ${SRC}
 
@@ -189,17 +210,21 @@ RUN cd ${SRC}  &&  wget  https://github.com/elixir-lang/elixir/archive/refs/tags
 ENV PATH=$PATH:${SRC}/elixir/bin
 
 
-RUN cd ${SRC}  && curl -L https://github.com/pprzetacznik/IElixir/archive/refs/heads/master.zip -o ielixir.zip \
-    && unzip ielixir.zip -d ielixir_tmp \
-    && mv ielixir_tmp/IElixir-master ielixir \
-    && rm -rf ielixir_tmp \
-    && cd ielixir \
-    && mix local.hex --force \
-    && mix local.rebar --force \
-    && mix deps.get \
-    && mix deps.compile \
-    #&& MIX_ENV=prod mix install \
-    && ./install_script.sh ;
+#RUN git clone --depth 1 https://github.com/pprzetacznik/IElixir.git && \
+#    cd IElixir && \
+#    sed -i '/sqlite_ecto2/d' mix.exs  && \
+#    rm -f lib/ielixir/repo.ex && \ 
+#    rm -f lib/ielixir/queries.ex && \
+#    rm -f lib/ielixir/history_entry.ex && \
+#    sed -i 's/:ecto, *//' mix.exs && \
+#    sed -i '/worker(IElixir\.Repo, \[\]),/d' lib/ielixir/supervisor.ex && \
+#    mix local.hex --force && \
+#    mix local.rebar --force  && \
+#    mix deps.get          && \
+#    mix deps.compile  && \
+#    MIX_ENV=prod mix compile && \
+#    chmod u+x ./install_script.sh && \
+#   ./install_script.sh;
 
 
 
@@ -209,7 +234,44 @@ RUN cd ${SRC}  && curl -L https://github.com/pprzetacznik/IElixir/archive/refs/h
 #RUN mix test;
 
 
+
 #################### end elixir ########################################################
+
+######################## start c/c++ ################################################### 
+
+
+RUN export CC=clang-14
+RUN export CXX=clang++-14
+
+
+RUN wget https://apt.llvm.org/llvm.sh && \
+    chmod +x llvm.sh && \
+    ./llvm.sh 14;
+
+
+RUN  cd ${SRC}  &&git clone --branch v0.9 https://github.com/root-project/cling.git && \
+    cd cling && \
+    mkdir build && cd build && \
+    cmake -DCMAKE_INSTALL_PREFIX=${SRC}/cling && \
+    make -j$(nproc) && \
+    make install ;
+
+ENV PATH=${PATH}:${SRC}/cling/bin
+
+RUN  cd ${SRC}  && git clone https://github.com/jupyter-xeus/xeus-cling.git && \
+    cd xeus-cling && \
+    mkdir build && cd build && \
+    cmake .. -DCMAKE_INSTALL_PREFIX=${SRC}/xeus-cling && \
+    make -j$(nproc) && make install &&
+
+ENV  PATH=${PATH}:${SRC}/xeus-cling/bin
+
+
+RUN    jupyter kernelspec install ${SRC}/xeus-cling/share/jupyter/kernels/xcpp11 --user
+
+
+
+######################## end c/c++ ###################################################
 
 
 ###################### init jupyter ####################################################
