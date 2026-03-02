@@ -1,15 +1,10 @@
 FROM debian:12-slim
 
-
-
 ARG SRC="/home/jupyter/local"
 ARG USR="jupyter"
 
-
-
-RUN apt-get upgrade
-
-RUN apt-get update && apt-get install -y \
+# Install base dependencies
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     apt-utils \
     curl wget \
     gzip unzip tar \
@@ -29,38 +24,27 @@ RUN apt-get update && apt-get install -y \
     libbz2-dev \
     libexpat1-dev \
     liblzma-dev \
+    libgmp-dev \
     tk-dev \
     libyaml-dev \
     libzmq3-dev \
     bash \
     sudo \
-    ;
+    cmake \
+    pkg-config \
+    nodejs \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
 
-
-
-RUN useradd -m -s /bin/bash  ${USR} 
-#    && echo "${USR}:qwerty" | chpasswd \
-#    && usermod -aG sudo ${USR}
-
-
-
-
-
-
-
-
-
+# User setup
+RUN useradd -m -s /bin/bash ${USR}
 USER ${USR}
-
 RUN mkdir -p ${SRC}
-
 WORKDIR ${SRC}
 
 ###################### start python #########################################################
-
-
-
-ARG PYTHON_VERSION=3.11.1
+# Python 3.13.1
+ARG PYTHON_VERSION=3.13.1
 
 RUN cd ${SRC} \
     && wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz \
@@ -68,166 +52,128 @@ RUN cd ${SRC} \
 
 RUN mkdir ${SRC}/python
 
-# build python and remove left-over sources
 RUN cd ${SRC}/Python-${PYTHON_VERSION} \
-    && ./configure --prefix=${SRC}/python   --enable-loadable-sqlite-extensions \
-    && cd ${SRC}/Python-${PYTHON_VERSION} && make && make install \
-    && rm ${SRC}/Python-${PYTHON_VERSION}.tgz
+    && ./configure --prefix=${SRC}/python --enable-loadable-sqlite-extensions --enable-optimizations \
+    && make -j$(nproc) && make install \
+    && rm -rf ${SRC}/Python-${PYTHON_VERSION} ${SRC}/Python-${PYTHON_VERSION}.tgz
 
-RUN ln -s ${SRC}/python/bin/python3.11 ${SRC}/python/bin/python;
+RUN ln -s ${SRC}/python/bin/python3 ${SRC}/python/bin/python
+ENV PATH="${SRC}/python/bin:${PATH}"
 
+# Install Jupyter, LSP and libraries
+# python-lsp-server[all] provides autocompletion for Python
+RUN pip3 install --no-cache-dir --upgrade pip \
+    && pip3 install --no-cache-dir ipython jupyterlab notebook jupyterlab-lsp jupyter-lsp 'python-lsp-server[all]' \
+    && pip3 install --no-cache-dir numpy matplotlib bokeh plotly pandas scipy injector pyzmq bash_kernel ipywidgets ipympl mnemonic eth-account bip-utils
 
-ENV PATH="$PATH:${SRC}/python/bin"
-
-RUN pip3.11 install ipython
-RUN pip3.11 install jupyter
-RUN pip3.11 install numpy
-RUN pip3.11 install matplotlib
-RUN pip3.11 install bokeh
-RUN pip3.11 install plotly
-RUN pip3.11 install pandas
-RUN pip3.11 install scipy
-RUN pip3.11 install injector
-RUN pip3.11 install pyzmq
-
+RUN python3 -m bash_kernel.install
 
 #################### end python #############################################################
 
 ##################### start golang ##########################################################
-ARG GOLANG_VERSION=1.21.0
+# Go 1.23.4
+ARG GOLANG_VERSION=1.23.4
 
-RUN cd ${SRC} &&  wget https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz && \
-    tar -xzvf go${GOLANG_VERSION}.linux-amd64.tar.gz
+RUN cd ${SRC} && wget https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz && \
+    tar -xzvf go${GOLANG_VERSION}.linux-amd64.tar.gz && \
+    rm go${GOLANG_VERSION}.linux-amd64.tar.gz
 
-RUN rm -rf ${SRC}/go${GOLANG_VERSION}.linux-amd64.tar.gz
+ENV PATH="${SRC}/go/bin:${PATH}"
+ENV GOPATH="${SRC}/go-workspace"
+ENV PATH="${GOPATH}/bin:${PATH}"
 
-ENV  PATH=$PATH:${SRC}/go/bin
-ENV GOPATH=${SRC}/go
+RUN go install github.com/gopherdata/gophernotes@v0.7.5
+# gopls provides LSP support for Go
+RUN go install golang.org/x/tools/gopls@latest
 
-RUN   go install github.com/gopherdata/gophernotes@v0.7.5
-
-
-RUN mkdir -p  ${HOME}/.local/share/jupyter/kernels/gophernotes
+RUN mkdir -p ${HOME}/.local/share/jupyter/kernels/gophernotes
 RUN cp $(go env GOPATH)/pkg/mod/github.com/gopherdata/gophernotes@v0.7.5/kernel/* ${HOME}/.local/share/jupyter/kernels/gophernotes/;
-RUN chmod 766  ${HOME}/.local/share/jupyter/kernels/gophernotes/*
-RUN cd ${HOME}/.local/share/jupyter/kernels/gophernotes &&  sed "s|gophernotes|$(go env GOPATH)/bin/gophernotes|" < kernel.json.in > kernel.json;
+RUN chmod 766 ${HOME}/.local/share/jupyter/kernels/gophernotes/*
+RUN cd ${HOME}/.local/share/jupyter/kernels/gophernotes && sed "s|gophernotes|$(go env GOPATH)/bin/gophernotes|" < kernel.json.in > kernel.json;
 
 ##################### end golang ##########################################################
 
 ##################### start ruby ##########################################################
+# Ruby 3.4.1
+ARG RUBY_MAJOR=3.4
+ARG RUBY_VERSION=3.4.1
 
-#no son las mismas versiones la que quedan en el contenedor
+RUN cd ${SRC} && wget "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR}/ruby-${RUBY_VERSION}.tar.gz" \
+    && tar xzvf ruby-${RUBY_VERSION}.tar.gz \
+    && rm ruby-${RUBY_VERSION}.tar.gz
 
-ARG LANG=C.UTF-8
-ARG RUBY_MAJOR=3.3
-ARG RUBY_VERSION=3.3.5
+RUN cd ${SRC}/ruby-${RUBY_VERSION} && ./configure --prefix=${SRC}/ruby && make -j$(nproc) && make install \
+    && rm -rf ${SRC}/ruby-${RUBY_VERSION}
 
-RUN cd ${SRC} &&  wget "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR}/ruby-${RUBY_VERSION}.tar.gz"
+ENV PATH="${SRC}/ruby/bin:${PATH}"
 
-RUN cd ${SRC} && tar xzvf ruby-${RUBY_VERSION}.tar.gz
-RUN cd ${SRC} && rm -rf ruby-${RUBY_VERSION}.tar.gz
-
-RUN cd ${SRC}/ruby-${RUBY_VERSION} && ./configure  --prefix=${SRC}/ruby  && make && make install ;
-
-RUN rm -rf ${SRC}/ruby-${RUBY_VERSION}
-
-ENV PATH=$PATH:${SRC}/ruby/bin
-
-
-
-RUN gem install rake
-RUN gem install ffi
-RUN gem install ffi-rzmq
-RUN gem install iruby
-
-
+# solargraph provides LSP support for Ruby
+RUN gem install --no-document rake ffi ffi-rzmq iruby solargraph
+RUN iruby register --force
 
 ##################### end ruby ##########################################################
 
+##################### start rust ##########################################################
+# Rust installation via rustup
+ENV RUSTUP_HOME=${SRC}/rustup
+ENV CARGO_HOME=${SRC}/cargo
+ENV PATH="${CARGO_HOME}/bin:${PATH}"
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path \
+    && ${CARGO_HOME}/bin/rustup component add rust-analyzer
+
+# Install evcxr (Rust Jupyter kernel)
+RUN cargo install evcxr_jupyter \
+    && evcxr_jupyter --install
+
+##################### end rust ##########################################################
+
 ###################### start erlang #####################################################
+# Erlang OTP 27.2
+ARG ERLANG_OTP=27.2
 
-ARG ERLANG_OTP=25.0
+RUN wget https://github.com/erlang/otp/releases/download/OTP-${ERLANG_OTP}/otp_src_${ERLANG_OTP}.tar.gz \
+    && tar xzvf otp_src_${ERLANG_OTP}.tar.gz \
+    && mkdir -p ${SRC}/erlang_build \
+    && mv otp_src_${ERLANG_OTP} ${SRC}/erlang_build/
 
-
-#  https://github.com/erlang/otp/archive/refs/tags/OTP-${ERLANG_OTP}.tar.gz
-RUN wget https://github.com/erlang/otp/releases/download/OTP-${ERLANG_OTP}/otp_src_${ERLANG_OTP}.tar.gz
-
-RUN tar xzvf otp_src_${ERLANG_OTP}.tar.gz;
-
-RUN mkdir -p ${SRC}/erlang
-
-RUN  mv  otp_src_${ERLANG_OTP} ${SRC}/erlang
-
-
-RUN cd  ${SRC}/erlang/otp_src_${ERLANG_OTP}  && \
-    ./configure  --without-javac --disable-hipe --enable-builtin-zlib --without-odbc --without-wx --prefix=${SRC}/erlang &&\
-    make clean && \
+RUN cd ${SRC}/erlang_build/otp_src_${ERLANG_OTP} && \
+    ./configure --without-javac --disable-hipe --enable-builtin-zlib --without-odbc --without-wx --prefix=${SRC}/erlang && \
     make -j$(nproc) && \
-    make install ;
+    make install && \
+    rm -rf ${SRC}/erlang_build
 
-
-ENV PATH=$PATH:${SRC}/erlang/bin
+ENV PATH="${SRC}/erlang/bin:${PATH}"
 
 ###################### end erlang #####################################################
 
 #################### start elixir ########################################################
-# vesiones de elixir otp
-# https://builds.hex.pm/builds/elixir/builds.txt
+# Elixir 1.18.1
+ARG ELIXIR_VERSION=1.18.1
 
+RUN cd ${SRC} && wget https://github.com/elixir-lang/elixir/archive/refs/tags/v${ELIXIR_VERSION}.tar.gz && \
+    tar xzvf v${ELIXIR_VERSION}.tar.gz && \
+    cd elixir-${ELIXIR_VERSION} && \
+    make -j$(nproc) && \
+    make install PREFIX="${SRC}/elixir" && \
+    cd ${SRC} && rm -rf elixir-${ELIXIR_VERSION} v${ELIXIR_VERSION}.tar.gz
 
-ARG ELIXIR_VERSION=1.17.0
-#ARG OTP_VERSION=25
+ENV PATH="${SRC}/elixir/bin:${PATH}"
 
-RUN cd ${SRC}  &&  wget  https://github.com/elixir-lang/elixir/archive/refs/tags/v${ELIXIR_VERSION}.tar.gz && \
-    tar xzvf  v${ELIXIR_VERSION}.tar.gz && \
-    mv "elixir-$ELIXIR_VERSION"  elixir && \
-    cd elixir && \
-    make && \
-    make install PREFIX="${SRC}/elixir" \
-    ;
-
-ENV PATH=$PATH:${SRC}/elixir/bin
-
-
-RUN cd ${SRC}  && curl -L https://github.com/pprzetacznik/IElixir/archive/refs/heads/master.zip -o ielixir.zip \
-    && unzip ielixir.zip -d ielixir_tmp \
-    && mv ielixir_tmp/IElixir-master ielixir \
-    && rm -rf ielixir_tmp \
+# Install IElixir (Jupyter kernel for Elixir)
+RUN cd ${SRC} && curl -L https://github.com/pprzetacznik/IElixir/archive/refs/heads/master.zip -o ielixir.zip \
+    && unzip ielixir.zip \
+    && mv IElixir-master ielixir \
+    && rm ielixir.zip \
     && cd ielixir \
     && mix local.hex --force \
     && mix local.rebar --force \
     && mix deps.get \
     && mix deps.compile \
-    #&& MIX_ENV=prod mix install \
-    && ./install_script.sh ;
-
-
-
-#RUN  mix --version;
-
-
-#RUN mix test;
-
+    && ./install_script.sh
 
 #################### end elixir ########################################################
 
-
-###################### init jupyter ####################################################
-
-RUN iruby register --force;
-
-#RUN jupyter kernel --kernel=ielixir;
-
-
-###################### end jupyter ######################################################
-
-
 EXPOSE 8888
-
-
-
-#COPY entrypoint.sh /
-
-#ENTRYPOINT [ "/entrypoint.sh" ]
 
 CMD jupyter lab --ip 0.0.0.0 --no-browser --NotebookApp.token='' --NotebookApp.password='' --notebook-dir="$HOME/note"
