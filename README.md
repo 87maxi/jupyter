@@ -59,3 +59,17 @@ ARG RUBY_VERSION=3.4.1
 ARG ERLANG_OTP=27.2
 ARG ELIXIR_VERSION=1.18.1
 ```
+
+### 📈 Configuración de Recursos (CPU y Memoria)
+
+Para optimizar el rendimiento y la capacidad de ejecutar múltiples procesos o notebooks en paralelo, el servicio `jupyter_note` en `docker-compose.yml` ha sido configurado con límites de recursos:
+
+```yaml
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0" # Limita el contenedor a 2 CPUs
+          memory: 4G # Limita la memoria a 4 GB
+```
+
+Puedes ajustar los valores de `cpus` y `memory` según los recursos disponibles en tu máquina host y tus necesidades específicas.

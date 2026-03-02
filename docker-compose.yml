@@ -12,6 +12,12 @@ services:
     ports:
       - 8080:8888
     user: jupyter
+    # Configuración de recursos para paralelización
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0" # Limita el contenedor a 2 CPUs
+          memory: 4G # Limita la memoria a 4 GB
 
 networks:
   travellist:
