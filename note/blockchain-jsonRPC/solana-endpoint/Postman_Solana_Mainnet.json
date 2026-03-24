@@ -1,0 +1,658 @@
+{
+	"info": {
+		"_postman_id": "b1b1b1b1-b1b1-4b1b-8b1b-b1b1b1b1b1b1",
+		"name": "Solana Mainnet RPC (Postman)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Accounts",
+			"item": [
+				{
+					"name": "getAccountInfo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getAccountInfo\",\"params\":[\"vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36AAmv3P9\",{\"encoding\":\"jsonParsed\"}]}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns all information associated with the account of provided Pubkey."
+					},
+					"response": []
+				},
+				{
+					"name": "getBalance",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getBalance\",\"params\":[\"vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36AAmv3P9\"]}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns the lamport balance of the account of provided Pubkey."
+					},
+					"response": []
+				},
+				{
+					"name": "getMultipleAccounts",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getMultipleAccounts\",\"params\":[[\"vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36AAmv3P9\",\"4fYNw3dojWmQ4dXtSGE9epjRGy9pFSx62YypT7av6wdf\"],{\"encoding\":\"jsonParsed\"}]}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns the balance and account data for a list of Pubkeys."
+					},
+					"response": []
+				},
+				{
+					"name": "getProgramAccounts",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getProgramAccounts\",\"params\":[\"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA\",{\"encoding\":\"jsonParsed\",\"filters\":[{\"dataSize\":165},{\"memcmp\":{\"offset\":32,\"bytes\":\"vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36AAmv3P9\"}}]}]}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns all accounts owned by the provided program Pubkey."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Blocks",
+			"item": [
+				{
+					"name": "getBlock",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getBlock\",\"params\":[430, {\"encoding\": \"json\", \"transactionDetails\":\"full\", \"rewards\":false}]}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns information about a specific block."
+					},
+					"response": []
+				},
+				{
+					"name": "getBlockHeight",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getBlockHeight\"}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns the current block height of the node."
+					},
+					"response": []
+				},
+				{
+					"name": "getBlockProduction",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getBlockProduction\"}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns recent block production information from the leader schedule."
+					},
+					"response": []
+				},
+				{
+					"name": "getBlocks",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getBlocks\",\"params\":[5, 10]}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns a list of confirmed blocks between two slots."
+					},
+					"response": []
+				},
+				{
+					"name": "getFirstAvailableBlock",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getFirstAvailableBlock\"}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns the slot of the first available block in the ledger."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Transactions",
+			"item": [
+				{
+					"name": "getTransaction",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getTransaction\",\"params\":[\"2n1b35eKDPf...\", \"json\"]}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns transaction details for a confirmed transaction."
+					},
+					"response": []
+				},
+				{
+					"name": "sendTransaction",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"sendTransaction\",\"params\":[\"base64_encoded_transaction_data\",{\"skipPreflight\":false,\"preflightCommitment\":\"finalized\"}]}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Submits a signed transaction to the cluster for processing."
+					},
+					"response": []
+				},
+				{
+					"name": "simulateTransaction",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"simulateTransaction\",\"params\":[\"base64_encoded_transaction_data\",{\"sigVerify\": false}]}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Simulates sending a transaction."
+					},
+					"response": []
+				},
+				{
+					"name": "getSignatureStatuses",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getSignatureStatuses\",\"params\":[[\"5VERv82D23...\"],{\"searchTransactionHistory\":true}]}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns the statuses of a list of transaction signatures."
+					},
+					"response": []
+				},
+				{
+					"name": "getRecentBlockhash",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getRecentBlockhash\"}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns a recent blockhash from the ledger."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Network Info",
+			"item": [
+				{
+					"name": "getClusterNodes",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getClusterNodes\"}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns information about all the nodes participating in the cluster."
+					},
+					"response": []
+				},
+				{
+					"name": "getEpochInfo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getEpochInfo\"}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns information about the current epoch."
+					},
+					"response": []
+				},
+				{
+					"name": "getFeeForMessage",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getFeeForMessage\",\"params\":[\"base64_encoded_message\"]}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns the fee for a given message."
+					},
+					"response": []
+				},
+				{
+					"name": "getHealth",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getHealth\"}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns the current health of the node."
+					},
+					"response": []
+				},
+				{
+					"name": "getIdentity",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getIdentity\"}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns the identity of the node."
+					},
+					"response": []
+				},
+				{
+					"name": "getInflationRate",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getInflationRate\"}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns the specific inflation values for the current epoch."
+					},
+					"response": []
+				},
+				{
+					"name": "getSlot",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getSlot\"}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns the current slot the node is processing."
+					},
+					"response": []
+				},
+				{
+					"name": "getVersion",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getVersion\"}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns the current version of the Solana node."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tokens",
+			"item": [
+				{
+					"name": "getTokenAccountBalance",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getTokenAccountBalance\",\"params\":[\"token_account_pubkey\"]}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns the token balance of an SPL Token account."
+					},
+					"response": []
+				},
+				{
+					"name": "getTokenAccountsByOwner",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getTokenAccountsByOwner\",\"params\":[\"owner_pubkey\",{\"mint\":\"mint_pubkey\"},{\"encoding\":\"jsonParsed\"}]}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns all SPL Token accounts by token owner."
+					},
+					"response": []
+				},
+				{
+					"name": "getTokenLargestAccounts",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getTokenLargestAccounts\",\"params\":[\"mint_pubkey\"]}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns the 20 largest accounts of a particular SPL Token type."
+					},
+					"response": []
+				},
+				{
+					"name": "getTokenSupply",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getTokenSupply\",\"params\":[\"mint_pubkey\"]}"
+						},
+						"url": {
+							"raw": "{{host}}",
+							"host": [
+								"{{host}}"
+							]
+						},
+						"description": "Returns the total supply of an SPL Token type."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

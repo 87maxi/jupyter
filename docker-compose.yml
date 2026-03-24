@@ -10,7 +10,7 @@ services:
     volumes:
       - ./note:/home/jupyter/note
     ports:
-      - 8080:8888
+      - 8181:8888
     user: jupyter
     # Configuración de recursos para paralelización
     deploy:
